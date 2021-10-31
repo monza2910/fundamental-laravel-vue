@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
+use App\Http\Resources\PostResource;
 
 class PostController extends Controller
 {
@@ -17,7 +18,7 @@ class PostController extends Controller
         $posts          = Post::latest()->get();
         $response       = [
             'success'   => true,
-            'data'      => $posts,
+            'data'      => PostResource::collection($posts),
             'message'   => 'Post Succesfuly Received'
         ];
 
