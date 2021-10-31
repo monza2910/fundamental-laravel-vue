@@ -117,9 +117,40 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request,Post $post)
     {
-        //
+        $input          = $request->all();
+        $validator      = Validator::make($input,[
+            'title'     => 'required',
+            'content'   => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            $response       = [
+                'success'   => true,
+                'message'   => $validator->errors()
+            ];
+
+            return response()->json($response, 403);;
+
+        }
+
+        // $post->title        = $input['title'];
+        // $post->content      = $input['content'];
+        // $post->save();
+        $post->update([
+            'title'         => $input['title'],
+            'content'       => $input['content'],
+        ]);
+
+        $response       = [
+            'success'   => true,
+            'data'      => new PostResource($post),
+            'message'   => 'Post Succesfuly Updated'
+        ];
+
+        return response()->json($response, 200 );;
+
     }
 
     /**
