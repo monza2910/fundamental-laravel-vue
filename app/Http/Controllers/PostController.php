@@ -5,10 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Http\Resources\PostResource;
+use App\Services\ResponseService;
 use Validator;
 
 class PostController extends Controller
 {
+
+    public function __construct(ResponseService $responseService){
+        $this->responseService = $responseService;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -17,23 +23,7 @@ class PostController extends Controller
     public function index()
     {
         $posts          = Post::latest()->get();
-        $response       = [
-            'success'   => true,
-            'data'      => PostResource::collection($posts),
-            'message'   => 'Post Succesfuly Received'
-        ];
-
-        return response()->json($response, 200);;
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return $this->responseService->successResponse(PostResource::collection($posts), 'Post Succesfuly Received');;
     }
 
     /**
@@ -51,23 +41,11 @@ class PostController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $response       = [
-                'success'   => true,
-                'message'   => $validator->errors()
-            ];
-
-            return response()->json($response, 403);;
-
+            return $this->responseService->errorResponse('Validator Error',$validator->errors());;
+        }else {
+            $post           = Post::create($input);
+            return $this->responseService->successResponse(new PostResource($post), 'Post Succesfuly Created');;
         }
-
-        $post           = Post::create($input);
-        $response       = [
-            'success'   => true,
-            'data'      => new PostResource($post),
-            'message'   => 'Post Succesfuly Created'
-        ];
-
-        return response()->json($response, 200 );;
     }
 
     /**
@@ -81,35 +59,13 @@ class PostController extends Controller
         $post       = Post::find($id);
 
         if (is_null($post)) {
-            $response       = [
-                'success'   => true,
-                'message'   => 'Post Not Found'
-            ];
-            return response()->json($response, 403 );;
-
+            return $this->responseService->errorResponse('Post Not Found');;
         }
 
-        $response       = [
-            'success'   => true,
-            'data'      => new PostResource($post),
-            'message'   => 'Post Succesfuly Retreived'
-        ];
-
-        return response()->json($response, 200 );;
+        return $this->responseService->successResponse(new PostResource($post), 'Post Succesfuly Retreived');;
         
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
+    
     /**
      * Update the specified resource in storage.
      *
@@ -119,6 +75,8 @@ class PostController extends Controller
      */
     public function update(Request $request,Post $post)
     {
+        
+
         $input          = $request->all();
         $validator      = Validator::make($input,[
             'title'     => 'required',
@@ -126,30 +84,14 @@ class PostController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $response       = [
-                'success'   => true,
-                'message'   => $validator->errors()
-            ];
-
-            return response()->json($response, 403);;
-
+            return $this->responseService->errorResponse('Validator Error',$validator->errors());;
+        }else {
+            $post->update([
+                'title'         => $input['title'],
+                'content'       => $input['content'],
+            ]);
+            return $this->responseService->successResponse(new PostResource($post), 'Post Succesfuly Updated');;
         }
-
-        // $post->title        = $input['title'];
-        // $post->content      = $input['content'];
-        // $post->save();
-        $post->update([
-            'title'         => $input['title'],
-            'content'       => $input['content'],
-        ]);
-
-        $response       = [
-            'success'   => true,
-            'data'      => new PostResource($post),
-            'message'   => 'Post Succesfuly Updated'
-        ];
-
-        return response()->json($response, 200 );;
 
     }
 
@@ -162,12 +104,6 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         $post->delete();
-        $response       = [
-            'success'   => true,
-            'data'      => new PostResource($post),
-            'message'   => 'Post Succesfuly Deleted'
-        ];
-
-        return response()->json($response, 200 );;
+        return $this->responseService->successResponse(new PostResource($post), 'Post Succesfuly Deleted');;
     }
 }

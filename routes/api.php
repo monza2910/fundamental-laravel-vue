@@ -14,7 +14,9 @@ use App\Http\Controllers\PostController;
 |
 */
 
-Route::resource('post', PostController::class);
+Route::resource('post', PostController::class)->except([
+    'create','edit'
+]);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
